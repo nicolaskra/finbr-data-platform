@@ -39,6 +39,8 @@ airflow/airflow.db
 airflow/airflow-webserver.pid
 airflow/standalone_admin_password.txt
 airflow/webserver_config.py
+airflow_home/
+.airflow/
 
 # dbt
 dbt/target/
