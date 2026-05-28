@@ -16,7 +16,7 @@ from __future__ import annotations
 import io
 import logging
 import zipfile
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -71,7 +71,7 @@ def ingest_cvm_informe_diario():
         Retorna YYYYMM do mes anterior ao logical_date.
         CVM publica o informe de mes M no inicio do mes M+1.
         """
-        ref = logical_date or datetime.utcnow()
+        ref = logical_date or datetime.now(UTC)
         primeiro_dia_mes_atual = ref.replace(day=1)
         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
         yyyymm = ultimo_dia_mes_anterior.strftime("%Y%m")

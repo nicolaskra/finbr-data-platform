@@ -51,10 +51,7 @@ addopts = [
     "--tb=short",
 ]
 
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["tests*", "airflow*", "dbt*"]
+# Sem build-system: projeto nao e distribuivel como package.
+# Codigo vive em airflow/dags e dbt/models.
+# Para instalar deps de dev: pip install -r requirements-dev.txt
+# (ou copiar de [project.optional-dependencies].dev)
