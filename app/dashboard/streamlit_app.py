@@ -1,24 +1,31 @@
-"""Streamlit dashboard — consome a finbr API.
+"""Streamlit dashboard — consome a finbr API (modo `api`) ou DuckDB direto (modo `duckdb`).
 
 Duas paginas:
 - Top Fundos do mes (tabela + grafico de barras)
 - Serie historica de uma classe (linha)
+
+Modos:
+- `FINBR_MODE=api` (default): consome FastAPI em `FINBR_API_URL`. Usado no Docker local.
+- `FINBR_MODE=duckdb`: le `data/warehouse/finbr.duckdb` direto. Usado no Streamlit Cloud
+  (free hosting nao permite subir o container da API).
 """
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pandas as pd
-import requests
 import streamlit as st
 
 # ----------------------------------------------------------------------
 # Config
 # ----------------------------------------------------------------------
 
+FINBR_MODE = os.getenv("FINBR_MODE", "api").lower()
 API_URL = os.getenv("FINBR_API_URL", "http://localhost:8000")
 DEFAULT_MES = os.getenv("FINBR_DEFAULT_MES", "2026-04-01")
+DUCKDB_PATH = os.getenv("FINBR_DUCKDB_PATH", "data/warehouse/finbr.duckdb")
 
 st.set_page_config(
     page_title="finbr · Dashboard",
@@ -28,19 +35,146 @@ st.set_page_config(
 
 
 # ----------------------------------------------------------------------
-# API helpers (cacheadas)
+# DuckDB helpers (modo standalone)
 # ----------------------------------------------------------------------
 
 
-@st.cache_data(ttl=300)
-def fetch_health() -> dict:
+@st.cache_resource
+def _get_duckdb_conn():
+    """Conexao read-only ao warehouse. Cacheada por sessao."""
+    import duckdb  # import local para nao exigir duckdb no modo api
+
+    path = Path(DUCKDB_PATH)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Warehouse nao encontrado em {path.resolve()}. "
+            f"No Streamlit Cloud, certifique-se que o arquivo foi commitado no repo."
+        )
+    return duckdb.connect(str(path), read_only=True)
+
+
+def _fetch_health_duckdb() -> dict:
+    con = _get_duckdb_conn()
+    path = Path(DUCKDB_PATH)
+    size_mb = round(path.stat().st_size / (1024 * 1024), 2)
+    rows_fct = con.execute(
+        "select count(*) from main_core.fct_fundo_rentabilidade_mensal"
+    ).fetchone()[0]
+    rows_dim = con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
+    return {
+        "status": "ok",
+        "warehouse_path": str(path),
+        "warehouse_size_mb": size_mb,
+        "rows_dim": rows_dim,
+        "rows_fct": rows_fct,
+    }
+
+
+def _fetch_top_fundos_duckdb(mes: str, limit: int) -> dict:
+    con = _get_duckdb_conn()
+    df = con.execute(
+        """
+        select
+            mes,
+            ranking_mes,
+            cnpj_classe,
+            tipo_classe,
+            rentabilidade_mes_pct,
+            dias_uteis,
+            vl_patrim_liq_fim_mes,
+            nr_cotistas_fim_mes
+        from main_analytics.top_fundos_rentabilidade_mes
+        where mes = ?
+        order by ranking_mes
+        limit ?
+        """,
+        [mes, limit],
+    ).df()
+
+    fundos = [
+        {
+            "mes": str(row["mes"]),
+            "ranking_mes": int(row["ranking_mes"]),
+            "cnpj_classe": row["cnpj_classe"],
+            "tipo_classe": row["tipo_classe"],
+            "rentabilidade_mes_pct": float(row["rentabilidade_mes_pct"]),
+            "dias_uteis": int(row["dias_uteis"]),
+            "vl_patrim_liq_fim_mes": float(row["vl_patrim_liq_fim_mes"]),
+            "nr_cotistas_fim_mes": int(row["nr_cotistas_fim_mes"]),
+        }
+        for _, row in df.iterrows()
+    ]
+    return {"mes": mes, "total": len(fundos), "fundos": fundos}
+
+
+def _fetch_historico_duckdb(cnpj: str) -> dict | None:
+    con = _get_duckdb_conn()
+    df = con.execute(
+        """
+        select
+            cnpj_classe,
+            id_subclasse,
+            tipo_classe,
+            mes,
+            rentabilidade_mes,
+            dias_uteis,
+            vl_patrim_liq_fim_mes,
+            nr_cotistas_fim_mes
+        from main_core.fct_fundo_rentabilidade_mensal
+        where cnpj_classe = ?
+        order by mes
+        """,
+        [cnpj],
+    ).df()
+
+    if df.empty:
+        return None
+
+    # Pega 1a subclasse caso haja multiplas (mesma logica da API)
+    primeira = df["id_subclasse"].iloc[0]
+    df = df[df["id_subclasse"] == primeira]
+
+    serie = [
+        {
+            "mes": str(row["mes"]),
+            "rentabilidade_mes": float(row["rentabilidade_mes"]),
+            "rentabilidade_mes_pct": float(row["rentabilidade_mes"]) * 100,
+            "dias_uteis": int(row["dias_uteis"]),
+            "vl_patrim_liq_fim_mes": (
+                float(row["vl_patrim_liq_fim_mes"])
+                if row["vl_patrim_liq_fim_mes"] is not None
+                else None
+            ),
+            "nr_cotistas_fim_mes": (
+                int(row["nr_cotistas_fim_mes"]) if row["nr_cotistas_fim_mes"] is not None else None
+            ),
+        }
+        for _, row in df.iterrows()
+    ]
+    return {
+        "cnpj_classe": df["cnpj_classe"].iloc[0],
+        "id_subclasse": df["id_subclasse"].iloc[0],
+        "tipo_classe": df["tipo_classe"].iloc[0],
+        "serie": serie,
+    }
+
+
+# ----------------------------------------------------------------------
+# API helpers (modo api)
+# ----------------------------------------------------------------------
+
+
+def _fetch_health_api() -> dict:
+    import requests
+
     r = requests.get(f"{API_URL}/health", timeout=10)
     r.raise_for_status()
     return r.json()
 
 
-@st.cache_data(ttl=300)
-def fetch_top_fundos(mes: str, limit: int = 10) -> dict:
+def _fetch_top_fundos_api(mes: str, limit: int) -> dict:
+    import requests
+
     r = requests.get(
         f"{API_URL}/analytics/top-fundos",
         params={"mes": mes, "limit": limit},
@@ -52,8 +186,9 @@ def fetch_top_fundos(mes: str, limit: int = 10) -> dict:
     return r.json()
 
 
-@st.cache_data(ttl=300)
-def fetch_historico(cnpj: str) -> dict | None:
+def _fetch_historico_api(cnpj: str) -> dict | None:
+    import requests
+
     r = requests.get(
         f"{API_URL}/fundos/rentabilidade",
         params={"cnpj": cnpj},
@@ -63,6 +198,32 @@ def fetch_historico(cnpj: str) -> dict | None:
         return None
     r.raise_for_status()
     return r.json()
+
+
+# ----------------------------------------------------------------------
+# Dispatcher (cacheado)
+# ----------------------------------------------------------------------
+
+
+@st.cache_data(ttl=300)
+def fetch_health() -> dict:
+    if FINBR_MODE == "duckdb":
+        return _fetch_health_duckdb()
+    return _fetch_health_api()
+
+
+@st.cache_data(ttl=300)
+def fetch_top_fundos(mes: str, limit: int = 10) -> dict:
+    if FINBR_MODE == "duckdb":
+        return _fetch_top_fundos_duckdb(mes, limit)
+    return _fetch_top_fundos_api(mes, limit)
+
+
+@st.cache_data(ttl=300)
+def fetch_historico(cnpj: str) -> dict | None:
+    if FINBR_MODE == "duckdb":
+        return _fetch_historico_duckdb(cnpj)
+    return _fetch_historico_api(cnpj)
 
 
 # ----------------------------------------------------------------------
@@ -81,16 +242,21 @@ st.sidebar.divider()
 st.sidebar.subheader("Status warehouse")
 try:
     h = fetch_health()
-    st.sidebar.success("API OK")
+    label = "DuckDB OK" if FINBR_MODE == "duckdb" else "API OK"
+    st.sidebar.success(label)
     st.sidebar.metric("Linhas (fct)", f"{h['rows_fct']:,}")
     st.sidebar.metric("Classes (dim)", f"{h['rows_dim']:,}")
     st.sidebar.metric("Warehouse", f"{h['warehouse_size_mb']} MB")
 except Exception as exc:
-    st.sidebar.error(f"API indisponivel: {exc}")
+    backend = "DuckDB" if FINBR_MODE == "duckdb" else "API"
+    st.sidebar.error(f"{backend} indisponivel: {exc}")
     st.stop()
 
 st.sidebar.divider()
-st.sidebar.caption(f"API: `{API_URL}`")
+if FINBR_MODE == "duckdb":
+    st.sidebar.caption(f"Mode: `duckdb`  ·  `{DUCKDB_PATH}`")
+else:
+    st.sidebar.caption(f"Mode: `api`  ·  `{API_URL}`")
 st.sidebar.caption("[Source · GitHub](https://github.com/nicolaskra/finbr-data-platform)")
 
 

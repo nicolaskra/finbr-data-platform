@@ -4,6 +4,7 @@
 
 **Plataforma de dados end-to-end sobre fundos de investimento brasileiros (CVM)**
 
+[![Live demo](https://img.shields.io/badge/demo-streamlit_cloud-FF4B4B?logo=streamlit)](https://finbr-data-platform.streamlit.app)
 [![CI](https://github.com/nicolaskra/finbr-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolaskra/finbr-data-platform/actions/workflows/ci.yml)
 [![34 tests passing](https://img.shields.io/badge/tests-34%20passing-brightgreen.svg)](#-testes-3434-passando)
 [![100% free-tier](https://img.shields.io/badge/stack-100%25_free-success.svg)](./CONSTRAINTS.md)
@@ -31,6 +32,12 @@ Em **um sábado de trabalho**, um pipeline real:
 ---
 
 ## 🚀 Como rodar (5 minutos)
+
+### Demo público (sem instalar nada)
+
+👉 **https://finbr-data-platform.streamlit.app** — dashboard rodando no Streamlit Cloud, modo `duckdb` (le o warehouse commitado direto, sem API). Deploy documentado em [`docs/deploy_streamlit_cloud.md`](./docs/deploy_streamlit_cloud.md).
+
+### Stack completa local (Airflow + API + Dashboard)
 
 ```bash
 git clone https://github.com/nicolaskra/finbr-data-platform.git
@@ -90,7 +97,7 @@ flowchart LR
 | Warehouse | **DuckDB** | Performance Snowflake-like · single-file · zero custo · [ADR 002](./docs/decisions/002-why-duckdb.md) |
 | Transformação | **dbt-duckdb** | Lineage + tests + docs autogerados · [ADR 003](./docs/decisions/003-why-dbt-core.md) |
 | API | **FastAPI + Pydantic** | Async · type-safe · OpenAPI grátis |
-| Dashboard | **Streamlit** | Prototipagem rápida · deploy free |
+| Dashboard | **Streamlit** | Dois modos: `api` (Docker local, consome FastAPI) ou `duckdb` (standalone, le warehouse direto — usado no Streamlit Cloud) · deploy free |
 | CI | **GitHub Actions** | 2.000 min/mês free |
 | Quality | **pytest + dbt tests** | 3 camadas: unit · business rules · data |
 

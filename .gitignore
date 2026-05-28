@@ -63,5 +63,9 @@ data/warehouse/*.duckdb
 *.duckdb
 *.duckdb.wal
 
+# Permite o warehouse pequeno (~19MB) para deploy no Streamlit Cloud.
+# Demais .duckdb continuam bloqueados.
+!data/warehouse/finbr.duckdb
+
 # Streamlit / FastAPI runtime
 .streamlit/secrets.toml
