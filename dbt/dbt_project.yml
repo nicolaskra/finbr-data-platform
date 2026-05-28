@@ -18,7 +18,10 @@ clean-targets:
 models:
   finbr:
     staging:
-      +materialized: view
+      # Materializado como TABLE (nao view): persiste no DuckDB para que
+      # consumers (FastAPI, dashboard) nao dependam do path raw em runtime.
+      # Trade-off: ocupa storage no warehouse (~14 MB/mes), ganha desacoplamento.
+      +materialized: table
       +schema: staging
     intermediate:
       +materialized: view

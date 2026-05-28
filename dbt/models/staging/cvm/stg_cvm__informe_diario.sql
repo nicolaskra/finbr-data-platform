@@ -1,9 +1,12 @@
 {{
   config(
-    materialized='view',
+    materialized='table',
     tags=['staging', 'cvm']
   )
 }}
+-- IMPORTANTE: materialized='table' (nao view) — staging persiste no DuckDB
+-- para que consumers downstream (FastAPI, Streamlit) nao dependam do path
+-- raw em runtime. Ver dbt_project.yml para racional.
 
 with raw as (
     -- Le parquet glob direto do data lake via DuckDB read_parquet.

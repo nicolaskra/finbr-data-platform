@@ -8,6 +8,13 @@
 # Login: admin / senha gerada em airflow/standalone_admin_password.txt
 # Parar:  docker compose down
 
+# Stack finbr — Airflow (orquestracao) + API (FastAPI) + Dashboard (Streamlit).
+# Subir tudo: docker compose up -d
+# Endpoints:
+#   - Airflow:   http://localhost:8080  (admin / senha em airflow/standalone_admin_password.txt)
+#   - API:       http://localhost:8000/docs
+#   - Dashboard: http://localhost:8501
+
 services:
   airflow:
     build:
@@ -40,3 +47,36 @@ services:
       timeout: 10s
       retries: 10
       start_period: 90s
+
+  api:
+    build:
+      context: .
+      dockerfile: app/api/Dockerfile
+    container_name: finbr-api
+    restart: unless-stopped
+    environment:
+      FINBR_DUCKDB_PATH: /opt/finbr/data/warehouse/finbr.duckdb
+      FINBR_CORS_ORIGINS: "http://localhost:8501"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Read-only no warehouse — DuckDB suporta multi-reader concorrente
+      - ./data:/opt/finbr/data:ro
+    depends_on:
+      airflow:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: app/dashboard/Dockerfile
+    container_name: finbr-dashboard
+    restart: unless-stopped
+    environment:
+      FINBR_API_URL: http://api:8000
+      FINBR_DEFAULT_MES: "2026-04-01"
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy

@@ -12,3 +12,6 @@ pydantic==2.9.2
 # Sessao 2: dbt + DuckDB
 dbt-duckdb==1.9.0
 duckdb==1.1.3
+
+# Sessao 3: PySpark (versao didatica da DAG de ingest)
+pyspark==3.5.3
