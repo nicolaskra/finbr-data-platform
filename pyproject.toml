@@ -37,7 +37,10 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
 ignore = ["E501"]  # gerenciado por formatter
 
 [tool.ruff.lint.per-file-ignores]
-"airflow/dags/*" = ["E402"]  # Airflow DAGs costumam ter imports condicionais
+# Airflow DAGs costumam ter:
+# - imports condicionais (E402)
+# - imports agrupados por convencao (stdlib | terceiros | airflow) — ignora I001
+"airflow/dags/*" = ["E402", "I001"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

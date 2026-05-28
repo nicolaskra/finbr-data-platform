@@ -57,8 +57,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install dbt-duckdb==1.9.0
-      - name: dbt deps + parse
+      - name: dbt deps + parse (target local, sem warehouse)
         working-directory: dbt
         run: |
           dbt deps --profiles-dir .
-          dbt parse --profiles-dir .
+          dbt parse --profiles-dir . --target local
