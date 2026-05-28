@@ -7,6 +7,7 @@ models:
       Filtros aplicados:
         - PL >= R$ 1 milhao (evita fundos micro / ilíquidos)
         - dias_uteis >= 15 (evita fundos com mes incompleto)
+        - nr_cotistas_fim_mes >= 5 (pulverizacao minima, vide finding #3)
 
     meta:
       owner: "nicolas@finbr"
@@ -46,6 +47,15 @@ models:
         description: "Rentabilidade mensal em percentual (ja multiplicado por 100)"
       - name: vl_patrim_liq_fim_mes
         description: "Patrimonio liquido no fim do mes (filtro >= R$ 1M aplicado)"
+      - name: nr_cotistas_fim_mes
+        description: >
+          Numero de cotistas no fim do mes. Filtro >= 5 aplicado para garantir
+          pulverizacao minima e evitar outliers de fundos com baixa base de
+          cotistas (vide finding #3 em docs/data_quality_findings.md).
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 5
+              inclusive: true
 
 exposures:
   - name: dashboard_top_fundos

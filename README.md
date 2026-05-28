@@ -106,7 +106,7 @@ Cada anomalia descoberta pelos data quality tests vira aprendizado em [`docs/dat
 |---|---|---|---|
 | 1 | **PL negativo** em 0.001% das linhas | Test `test_vl_patrim_liq` quebrou | Threshold informado: fundos em liquidação / alavancados |
 | 2 | **Schema CVM mudou** (Res. 175/2024) | Fail-fast da DAG (`raise ValueError`) | EXPECTED_COLUMNS atualizado |
-| 3 | **Outlier 1360%** no top fundos | Smoke test do dashboard | Investigado · filtro de cotistas em backlog |
+| 3 | **Outlier 1360%** no top fundos | Smoke test do dashboard | ✅ Filtro `nr_cotistas >= 5` aplicado |
 
 > **Sinal sênior:** thresholds informados por **conhecimento do dado**, não absolutos.
 

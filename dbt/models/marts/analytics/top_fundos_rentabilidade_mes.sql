@@ -6,13 +6,16 @@
 }}
 
 -- Ranking analitico: top 50 classes de fundo por rentabilidade mensal,
--- filtrando classes com PL minimo (R$ 1 milhao) e numero minimo
--- de dias uteis (15) para evitar fundos novos ou ilíquidos.
+-- filtrando classes com PL minimo (R$ 1 milhao), numero minimo de dias
+-- uteis (15) e pulverizacao minima (>= 5 cotistas) para evitar fundos
+-- novos, ilíquidos ou com NAV inicial distorcido por baixa pulverizacao
+-- (vide finding #3 em docs/data_quality_findings.md).
 
 with rent as (
     select * from {{ ref('fct_fundo_rentabilidade_mensal') }}
     where dias_uteis >= 15
       and vl_patrim_liq_fim_mes >= 1000000  -- R$ 1M minimo
+      and nr_cotistas_fim_mes >= 5          -- pulverizacao minima (finding #3)
 ),
 
 ranked as (

@@ -179,6 +179,21 @@ class TestDistribuicao:
             f"{n_violacao} fundos no top com PL < R$ 1M (filtro de qualidade quebrou)"
         )
 
+    def test_top_fundos_pulverizacao_minima(self, duckdb_con):
+        """
+        Filtro de pulverizacao minima (nr_cotistas >= 5) deve estar aplicado.
+        Vide finding #3 em docs/data_quality_findings.md: fundos com poucos
+        cotistas podem ter NAV inicial distorcido e gerar rentabilidades
+        artificiais (ex: 1360% Abr/2026 com 3 cotistas).
+        """
+        min_cotistas = duckdb_con.execute(
+            "select min(nr_cotistas_fim_mes) from main_analytics.top_fundos_rentabilidade_mes"
+        ).fetchone()[0]
+        assert min_cotistas is not None and min_cotistas >= 5, (
+            f"Top fundos com min(nr_cotistas) = {min_cotistas} "
+            f"(filtro de pulverizacao >= 5 quebrou)"
+        )
+
 
 # ----------------------------------------------------------------------
 # Smoke test: query exemplo deve funcionar

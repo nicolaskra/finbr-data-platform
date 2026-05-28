@@ -63,7 +63,10 @@ caso porque ele passa nos dois. Para análise pública, considerar adicionar:
 - Filtro adicional: `nr_cotistas >= 5` (pulverização mínima)
 - Ou: filtro percentil 99 da distribuição mensal
 
-**Status:** documentado, não implementado. Próximo refinamento do `top_fundos`.
+**Status:** ✅ RESOLVIDO em 2026-05-28.
+
+**Implementação:** filtro `nr_cotistas_fim_mes >= 5` adicionado ao
+`top_fundos_rentabilidade_mes.sql` em `fix/finding-3-cotistas`.
 
 ---
 
