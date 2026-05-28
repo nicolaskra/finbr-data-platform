@@ -1,0 +1,14 @@
+# Airflow base instalado via imagem oficial (apache/airflow:2.10.3-python3.11)
+# Aqui ficam deps EXTRAS especificas das DAGs
+
+# Dados / HTTP
+requests==2.32.3
+pandas==2.2.3
+pyarrow==17.0.0
+
+# Validacao de schema
+pydantic==2.9.2
+
+# (Etapas futuras)
+# dbt-duckdb==1.9.0
+# duckdb==1.1.3

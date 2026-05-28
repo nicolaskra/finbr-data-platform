@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+service-account*.json
+credentials.json
+
+# Airflow runtime
+airflow/logs/
+airflow/airflow.db
+airflow/airflow-webserver.pid
+airflow/standalone_admin_password.txt
+airflow/webserver_config.py
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+profiles.yml
+
+# Data (raw is gitignored; only schema goes to repo)
+data/raw/**/*.parquet
+data/raw/**/*.csv
+data/raw/**/*.zip
+data/staging/**/*.parquet
+data/warehouse/*.duckdb
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
+
+# Streamlit / FastAPI runtime
+.streamlit/secrets.toml

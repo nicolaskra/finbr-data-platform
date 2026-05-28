@@ -1,0 +1,49 @@
+# Airflow Standalone para desenvolvimento local
+# Decisao: Standalone (single-node + SQLite) ao inves de full setup (Postgres + Redis + Celery)
+# Motivo: portfolio local, simplicidade > performance. Em prod seria diferente.
+# Ver: docs/decisions/001-why-airflow-standalone.md
+#
+# Subir: docker compose up -d
+# Acessar: http://localhost:8080
+# Login: admin / senha gerada em airflow/standalone_admin_password.txt
+# Parar:  docker compose down
+
+services:
+  airflow:
+    image: apache/airflow:2.10.3-python3.11
+    container_name: finbr-airflow
+    restart: unless-stopped
+    environment:
+      # Modo Standalone (SQLite metadata, Sequential Executor)
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__WEBSERVER__BASE_URL: http://localhost:8080
+      # Permitir DAGs lerem variaveis do .env
+      _PIP_ADDITIONAL_REQUIREMENTS: ""  # vazio aqui; usar Dockerfile se quiser deps fixas
+      # Avisos
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      # Workers
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 30
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/config:/opt/airflow/config
+      - ./airflow/requirements.txt:/requirements.txt:ro
+      - ./data:/opt/airflow/data
+    command:
+      - bash
+      - -c
+      - |
+        pip install --user -r /requirements.txt &&
+        airflow standalone
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s

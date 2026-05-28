@@ -1,0 +1,60 @@
+[project]
+name = "finbr-data-platform"
+version = "0.1.0"
+description = "End-to-end data platform on Brazilian public financial data (CVM, BCB, B3)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Nicolas Klein", email = "nicolas_klein@hotmail.com" }
+]
+keywords = ["data-engineering", "airflow", "dbt", "duckdb", "financial-data", "brazil", "cvm", "bcb", "b3"]
+
+dependencies = [
+    "requests>=2.32.0",
+    "pandas>=2.2.0",
+    "pyarrow>=17.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+]
+
+# Airflow tem requirements proprio em airflow/requirements.txt
+# (Airflow recomenda constraints file ao inves de pyproject.toml)
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]  # gerenciado por formatter
+
+[tool.ruff.lint.per-file-ignores]
+"airflow/dags/*" = ["E402"]  # Airflow DAGs costumam ter imports condicionais
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*", "airflow*", "dbt*"]
