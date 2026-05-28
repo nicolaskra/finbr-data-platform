@@ -4,7 +4,7 @@
 
 **Plataforma de dados end-to-end sobre fundos de investimento brasileiros (CVM)**
 
-[![Live demo](https://img.shields.io/badge/demo-streamlit_cloud-FF4B4B?logo=streamlit)](https://finbr-data-platform.streamlit.app)
+[![Live demo](https://img.shields.io/badge/demo-streamlit_cloud-FF4B4B?logo=streamlit)](https://finbr-data-platform-fmwlw5fpfhdduskgn8zlrt.streamlit.app/)
 [![CI](https://github.com/nicolaskra/finbr-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolaskra/finbr-data-platform/actions/workflows/ci.yml)
 [![34 tests passing](https://img.shields.io/badge/tests-34%20passing-brightgreen.svg)](#-testes-3434-passando)
 [![100% free-tier](https://img.shields.io/badge/stack-100%25_free-success.svg)](./CONSTRAINTS.md)
@@ -35,7 +35,7 @@ Em **um sábado de trabalho**, um pipeline real:
 
 ### Demo público (sem instalar nada)
 
-👉 **https://finbr-data-platform.streamlit.app** — dashboard rodando no Streamlit Cloud, modo `duckdb` (le o warehouse commitado direto, sem API). Deploy documentado em [`docs/deploy_streamlit_cloud.md`](./docs/deploy_streamlit_cloud.md).
+👉 **https://finbr-data-platform-fmwlw5fpfhdduskgn8zlrt.streamlit.app/** — dashboard rodando no Streamlit Cloud, modo `duckdb` (lê o warehouse commitado direto, sem API). Deploy documentado em [`docs/deploy_streamlit_cloud.md`](./docs/deploy_streamlit_cloud.md).
 
 ### Stack completa local (Airflow + API + Dashboard)
 

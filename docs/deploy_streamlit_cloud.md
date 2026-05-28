@@ -26,10 +26,15 @@ Passo a passo para publicar o dashboard em https://share.streamlit.io (free tier
    FINBR_DEFAULT_MES = "2026-04-01"
    ```
 5. **Deploy.** Primeiro build ~3-5 min (instala `duckdb`, `pandas`, `pyarrow`).
-6. Validar:
+6. **Tornar público (OBRIGATÓRIO para portfolio):**
+   - Default do Streamlit Cloud é **Restricted** (exige login Streamlit). Recrutador sem conta bate em `share.streamlit.io/-/auth/app` e vai embora.
+   - Em **Manage app → Settings → Sharing**, mudar visibility para **Public** ("Anyone with the link can view").
+7. Validar:
    - Sidebar mostra "DuckDB OK" + counts (~25k classes, ~25k fct rows)
    - Top fundos retorna dados para `2026-04-01`
    - Série histórica retorna para CNPJ `00.017.024/0001-53`
+
+URL atual do deploy: https://finbr-data-platform-fmwlw5fpfhdduskgn8zlrt.streamlit.app/
 
 ## Atualizar warehouse
 
