@@ -21,8 +21,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from app.dashboard.finbr import queries
-from app.dashboard.finbr.constants import (
+# Imports relativos ao diretorio do script (app/dashboard/).
+# Streamlit Cloud roda este arquivo com `app/dashboard/` no sys.path; usar
+# `from app.dashboard.finbr ...` falharia. Em Docker local funciona dos dois
+# jeitos porque o WORKDIR e o repo root.
+from finbr import queries
+from finbr.constants import (
     COLOR_BENCHMARK,
     COLOR_NEGATIVE,
     COLOR_NEUTRAL,
@@ -30,8 +34,8 @@ from app.dashboard.finbr.constants import (
     COLOR_PRIMARY,
     cdi_do_mes,
 )
-from app.dashboard.finbr.formatters import fmt_int, fmt_pct, fmt_pct_signed, fmt_rs
-from app.dashboard.finbr.theme import aplicar_layout_padrao
+from finbr.formatters import fmt_int, fmt_pct, fmt_pct_signed, fmt_rs
+from finbr.theme import aplicar_layout_padrao
 
 # ---------------------------------------------------------------------------
 # Config
