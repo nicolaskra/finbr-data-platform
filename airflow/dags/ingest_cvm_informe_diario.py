@@ -5,9 +5,9 @@ Baixa o Informe Diário de Fundos de Investimento (CVM) do mês anterior,
 valida schema, salva como Parquet particionado.
 
 Fonte: https://dados.cvm.gov.br/dataset/fi-doc-inf_diario
-Schema (CVM):
-    CNPJ_FUNDO, DT_COMPTC, VL_TOTAL, VL_QUOTA, VL_PATRIM_LIQ,
-    CAPTC_DIA, RESG_DIA, NR_COTST
+Schema (CVM, pos-Resolucao 175/2024 — estrutura Classes e Subclasses):
+    TP_FUNDO_CLASSE, CNPJ_FUNDO_CLASSE, ID_SUBCLASSE, DT_COMPTC,
+    VL_TOTAL, VL_QUOTA, VL_PATRIM_LIQ, CAPTC_DIA, RESG_DIA, NR_COTST
 
 Particionamento: data/raw/cvm/inf_diario/YYYY-MM/inf_diario.parquet
 """
@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import io
 import logging
+import shutil
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -35,9 +36,13 @@ CVM_BASE_URL = (
 # Caminho dentro do container Airflow (montado via docker-compose)
 RAW_BASE = Path("/opt/airflow/data/raw/cvm/inf_diario")
 
+# Schema esperado pos-Resolucao CVM 175/2024 (estrutura Classes/Subclasses).
+# Pre-2024 era TP_FUNDO/CNPJ_FUNDO; agora e TP_FUNDO_CLASSE/CNPJ_FUNDO_CLASSE
+# + ID_SUBCLASSE opcional.
 EXPECTED_COLUMNS = {
-    "TP_FUNDO",
-    "CNPJ_FUNDO",
+    "TP_FUNDO_CLASSE",
+    "CNPJ_FUNDO_CLASSE",
+    "ID_SUBCLASSE",
     "DT_COMPTC",
     "VL_TOTAL",
     "VL_QUOTA",
@@ -103,7 +108,7 @@ def ingest_cvm_informe_diario():
                     f,
                     sep=";",
                     encoding="latin-1",
-                    dtype={"CNPJ_FUNDO": str},
+                    dtype={"CNPJ_FUNDO_CLASSE": str, "ID_SUBCLASSE": str},
                 )
 
         # Validacao de schema (raise se faltar coluna obrigatoria)
@@ -126,7 +131,7 @@ def ingest_cvm_informe_diario():
         return {
             "yyyymm": yyyymm,
             "linhas": len(df),
-            "fundos_unicos": df["CNPJ_FUNDO"].nunique(),
+            "fundos_unicos": df["CNPJ_FUNDO_CLASSE"].nunique(),
             "tmp_path": str(tmp_path),
             "tamanho_bytes": tmp_path.stat().st_size,
         }
@@ -142,7 +147,9 @@ def ingest_cvm_informe_diario():
         destino = destino_dir / "inf_diario.parquet"
 
         # Idempotencia: sobrescreve (download determinístico, mesmo periodo = mesmo dado)
-        Path(metadata["tmp_path"]).rename(destino)
+        # shutil.move funciona entre filesystems diferentes (tmpfs -> volume bind mount).
+        # Path.rename() falha com OSError [Errno 18] em cross-device.
+        shutil.move(str(metadata["tmp_path"]), str(destino))
 
         LOGGER.info(
             "Persistido: %s (%d linhas, %d fundos, %.2f MB)",

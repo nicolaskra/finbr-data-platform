@@ -47,15 +47,16 @@ def dag(dagbag):
 
 @pytest.fixture
 def csv_cvm_valido() -> bytes:
-    """CSV no formato CVM, valido."""
+    """CSV no formato CVM (pos-Resolucao 175/2024 - Classes/Subclasses)."""
     df = pd.DataFrame(
         {
-            "TP_FUNDO": ["FI", "FI", "FI"],
-            "CNPJ_FUNDO": [
+            "TP_FUNDO_CLASSE": ["CLASSES - FIF", "CLASSES - FIF", "CLASSES - FIF"],
+            "CNPJ_FUNDO_CLASSE": [
                 "00.000.001/0001-01",
                 "00.000.002/0001-02",
                 "00.000.003/0001-03",
             ],
+            "ID_SUBCLASSE": ["", "", ""],
             "DT_COMPTC": ["2026-04-01", "2026-04-01", "2026-04-02"],
             "VL_TOTAL": [1000.50, 2000.75, 3000.00],
             "VL_QUOTA": [1.1, 1.2, 1.3],
@@ -80,7 +81,7 @@ def zip_cvm_valido(csv_cvm_valido: bytes) -> bytes:
 @pytest.fixture
 def zip_cvm_schema_quebrado() -> bytes:
     """ZIP com CSV faltando colunas obrigatorias (simula mudanca CVM)."""
-    df = pd.DataFrame({"CNPJ_FUNDO": ["01"], "DT_COMPTC": ["2026-04-01"]})
+    df = pd.DataFrame({"CNPJ_FUNDO_CLASSE": ["01"], "DT_COMPTC": ["2026-04-01"]})
     csv = df.to_csv(sep=";", index=False, encoding="latin-1").encode("latin-1")
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
