@@ -1,4 +1,5 @@
 """Tests endpoint /analytics/top-fundos."""
+
 from __future__ import annotations
 
 from fastapi.testclient import TestClient

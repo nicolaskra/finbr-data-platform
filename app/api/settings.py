@@ -1,4 +1,5 @@
 """Settings carregadas via env vars (12-factor)."""
+
 from __future__ import annotations
 
 import os
@@ -7,9 +8,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    duckdb_path: str = os.getenv(
-        "FINBR_DUCKDB_PATH", "/opt/finbr/data/warehouse/finbr.duckdb"
-    )
+    duckdb_path: str = os.getenv("FINBR_DUCKDB_PATH", "/opt/finbr/data/warehouse/finbr.duckdb")
     api_title: str = "finbr API"
     api_version: str = "0.1.0"
     api_description: str = (

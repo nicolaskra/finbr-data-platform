@@ -10,6 +10,7 @@ Cobre:
 Rodar:
     pytest tests/dags/test_ingest_cvm_informe_diario.py -v
 """
+
 from __future__ import annotations
 
 import io
@@ -96,9 +97,7 @@ def zip_cvm_schema_quebrado() -> bytes:
 
 def test_dagbag_sem_import_errors(dagbag):
     """DagBag carrega tudo sem ImportError, SyntaxError, ou ciclos."""
-    assert dagbag.import_errors == {}, (
-        f"Import errors na DagBag: {dagbag.import_errors}"
-    )
+    assert dagbag.import_errors == {}, f"Import errors na DagBag: {dagbag.import_errors}"
 
 
 def test_dag_existe(dag):
@@ -203,6 +202,4 @@ def test_extrair_e_validar_falha_se_schema_quebra(dag, zip_cvm_schema_quebrado):
     """Se CVM mudar schema (remover coluna), DAG falha com erro claro."""
     task = dag.get_task("extrair_e_validar")
     with pytest.raises(ValueError, match="Schema CVM mudou"):
-        task.python_callable(
-            zip_bytes=zip_cvm_schema_quebrado, yyyymm="202604"
-        )
+        task.python_callable(zip_bytes=zip_cvm_schema_quebrado, yyyymm="202604")

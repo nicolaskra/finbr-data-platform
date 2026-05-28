@@ -21,6 +21,7 @@ para processar 14 MB). Mas a logica esta aqui pra:
 
 Schema, particionamento e idempotencia identicos a versao pandas.
 """
+
 from __future__ import annotations
 
 import io
@@ -35,10 +36,7 @@ from airflow.decorators import dag, task
 
 LOGGER = logging.getLogger(__name__)
 
-CVM_BASE_URL = (
-    "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/"
-    "inf_diario_fi_{yyyymm}.zip"
-)
+CVM_BASE_URL = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/inf_diario_fi_{yyyymm}.zip"
 
 RAW_BASE = Path("/opt/airflow/data/raw/cvm/inf_diario")
 
@@ -106,7 +104,7 @@ def ingest_cvm_informe_diario_spark():
         """Processa CSV com PySpark: validacao schema + cast + escreve parquet particionado."""
         # Import dentro da task pra nao quebrar parse da DAG se PySpark nao instalado
         from pyspark.sql import SparkSession
-        from pyspark.sql import functions as F
+        from pyspark.sql import functions as F  # noqa: N812  (convencao PySpark)
         from pyspark.sql.types import (
             DoubleType,
             IntegerType,
@@ -152,9 +150,7 @@ def ingest_cvm_informe_diario_spark():
             cols_lidas = set(df.columns)
             faltantes = EXPECTED_COLUMNS - cols_lidas
             if faltantes:
-                raise ValueError(
-                    f"Schema CVM mudou — colunas faltantes em {yyyymm}: {faltantes}"
-                )
+                raise ValueError(f"Schema CVM mudou — colunas faltantes em {yyyymm}: {faltantes}")
 
             # Cast DT_COMPTC pra date
             df = df.withColumn("DT_COMPTC", F.to_date("DT_COMPTC"))

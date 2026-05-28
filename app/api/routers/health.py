@@ -1,4 +1,5 @@
 """Endpoint /health — smoke test do warehouse."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -28,9 +29,7 @@ def health() -> HealthResponse:
         rows_staging = con.execute(
             "select count(*) from main_staging.stg_cvm__informe_diario"
         ).fetchone()[0]
-        rows_dim = con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        rows_dim = con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         rows_fct = con.execute(
             "select count(*) from main_core.fct_fundo_rentabilidade_mensal"
         ).fetchone()[0]

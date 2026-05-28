@@ -11,6 +11,7 @@ Schema (CVM, pos-Resolucao 175/2024 — estrutura Classes e Subclasses):
 
 Particionamento: data/raw/cvm/inf_diario/YYYY-MM/inf_diario.parquet
 """
+
 from __future__ import annotations
 
 import io
@@ -28,10 +29,7 @@ from airflow.decorators import dag, task
 
 LOGGER = logging.getLogger(__name__)
 
-CVM_BASE_URL = (
-    "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/"
-    "inf_diario_fi_{yyyymm}.zip"
-)
+CVM_BASE_URL = "https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/inf_diario_fi_{yyyymm}.zip"
 
 # Caminho dentro do container Airflow (montado via docker-compose)
 RAW_BASE = Path("/opt/airflow/data/raw/cvm/inf_diario")
@@ -114,9 +112,7 @@ def ingest_cvm_informe_diario():
         # Validacao de schema (raise se faltar coluna obrigatoria)
         cols_faltantes = EXPECTED_COLUMNS - set(df.columns)
         if cols_faltantes:
-            raise ValueError(
-                f"Schema CVM mudou — colunas faltantes em {yyyymm}: {cols_faltantes}"
-            )
+            raise ValueError(f"Schema CVM mudou — colunas faltantes em {yyyymm}: {cols_faltantes}")
 
         # Type coercion seguro
         df["DT_COMPTC"] = pd.to_datetime(df["DT_COMPTC"], errors="coerce")

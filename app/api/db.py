@@ -1,4 +1,5 @@
 """Conexao DuckDB read-only — segura para multi-reader."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator

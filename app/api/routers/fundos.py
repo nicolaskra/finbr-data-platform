@@ -1,4 +1,5 @@
 """Endpoint /fundos/rentabilidade — serie historica de classe."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -75,9 +76,7 @@ def rentabilidade_historica(
                 else None
             ),
             nr_cotistas_fim_mes=(
-                int(row["nr_cotistas_fim_mes"])
-                if row["nr_cotistas_fim_mes"] is not None
-                else None
+                int(row["nr_cotistas_fim_mes"]) if row["nr_cotistas_fim_mes"] is not None else None
             ),
         )
         for _, row in df.iterrows()

@@ -15,6 +15,7 @@ Pipeline:
                                   staging / intermediate / marts
                                   + analytics: top_fundos_rentabilidade_mes
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

@@ -4,10 +4,10 @@ Duas paginas:
 - Top Fundos do mes (tabela + grafico de barras)
 - Serie historica de uma classe (linha)
 """
+
 from __future__ import annotations
 
 import os
-from datetime import date
 
 import pandas as pd
 import requests
@@ -122,9 +122,7 @@ if pagina == "🏆 Top fundos":
     else:
         df = pd.DataFrame(data["fundos"])
         df["rentabilidade_mes_pct"] = df["rentabilidade_mes_pct"].round(2)
-        df["vl_patrim_liq_fim_mes_R$"] = df["vl_patrim_liq_fim_mes"].apply(
-            lambda v: f"R$ {v:,.0f}"
-        )
+        df["vl_patrim_liq_fim_mes_R$"] = df["vl_patrim_liq_fim_mes"].apply(lambda v: f"R$ {v:,.0f}")
 
         st.subheader(f"Top {len(df)} · {mes_input}")
 

@@ -4,9 +4,9 @@ Estrategia: cria um DuckDB temporario com schema espelhando o warehouse real
 (staging + core + analytics), popula com dados sinteticos minimos,
 e injeta via env var FINBR_DUCKDB_PATH antes do app subir.
 """
+
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import duckdb

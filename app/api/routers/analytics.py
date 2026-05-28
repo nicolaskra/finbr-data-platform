@@ -1,4 +1,5 @@
 """Endpoint /analytics/top-fundos — ranking mensal."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -18,12 +19,14 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
     responses={404: {"description": "Mes sem dados"}},
 )
 def top_fundos(
-    mes: date = Query(
+    mes: date = Query(  # noqa: B008  (pattern padrao FastAPI)
         ...,
         description="Primeiro dia do mes desejado (ex: 2026-04-01)",
         examples=["2026-04-01"],
     ),
-    limit: int = Query(10, ge=1, le=50, description="Quantos resultados retornar"),
+    limit: int = Query(  # noqa: B008
+        10, ge=1, le=50, description="Quantos resultados retornar"
+    ),
 ) -> TopFundosResponse:
     """Top N classes de fundo por rentabilidade mensal (PL min R$1M, 15+ dias uteis)."""
     with get_connection() as con:

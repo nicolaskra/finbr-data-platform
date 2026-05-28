@@ -4,6 +4,7 @@ Fixtures para data quality tests.
 Conecta ao warehouse DuckDB REAL (data/warehouse/finbr.duckdb).
 Esses tests SO rodam se o warehouse existir — em CI sao SKIPPED.
 """
+
 from __future__ import annotations
 
 import os

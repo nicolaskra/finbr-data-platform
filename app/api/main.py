@@ -1,4 +1,5 @@
 """FastAPI entry point — finbr API."""
+
 from __future__ import annotations
 
 from fastapi import FastAPI

@@ -12,10 +12,8 @@ Cobrem:
 - Idempotencia (re-rodar nao duplica)
 - Distribuicao de outliers (max 1% de fundos com rentab > 100%)
 """
+
 from __future__ import annotations
-
-import pytest
-
 
 # ----------------------------------------------------------------------
 # Volumes
@@ -30,16 +28,12 @@ class TestVolumes:
         assert n > 100_000, f"Staging com apenas {n} linhas (esperado >100k)"
 
     def test_dim_tem_fundos(self, duckdb_con):
-        n = duckdb_con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        n = duckdb_con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         assert n > 1_000, f"Dim com apenas {n} fundos (esperado >1k)"
 
     def test_fct_proporcional_a_dim(self, duckdb_con):
         """fct deve ter pelo menos 50% do tamanho do dim (cada fundo >= 1 mes)."""
-        dim_n = duckdb_con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        dim_n = duckdb_con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         fct_n = duckdb_con.execute(
             "select count(*) from main_core.fct_fundo_rentabilidade_mensal"
         ).fetchone()[0]
@@ -74,7 +68,7 @@ class TestRanges:
             "select count(*) from main_staging.stg_cvm__informe_diario where vl_patrim_liq < 0"
         ).fetchone()[0]
         pct = negativos / total
-        assert pct < 0.001, f"{pct*100:.3f}% das linhas com PL negativo (limite 0.1%)"
+        assert pct < 0.001, f"{pct * 100:.3f}% das linhas com PL negativo (limite 0.1%)"
 
         # PL muito negativo (< -R$ 1M) e suspeito de bug, nao realidade
         muito_negativo = duckdb_con.execute(
@@ -119,9 +113,7 @@ class TestIntegridade:
         assert orfaos == 0, f"{orfaos} fatos sem dim correspondente"
 
     def test_dim_sem_duplicatas(self, duckdb_con):
-        total = duckdb_con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        total = duckdb_con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         unicos = duckdb_con.execute(
             "select count(distinct sk_fundo_classe) from main_core.dim_fundo_classe"
         ).fetchone()[0]
@@ -161,7 +153,7 @@ class TestDistribuicao:
         ).fetchone()[0]
         pct = outliers / total
         assert pct <= 0.01, (
-            f"{pct*100:.2f}% dos fundos com rentab > 100% (limite: 1%). "
+            f"{pct * 100:.2f}% dos fundos com rentab > 100% (limite: 1%). "
             f"Verificar bug no calculo composto."
         )
 
