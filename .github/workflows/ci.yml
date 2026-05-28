@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Ruff (lint + format check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.6.9
+      - run: ruff check .
+      - run: ruff format --check .
+
+  tests-python:
+    name: Python tests (DAGs + API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Airflow (com constraints)
+        run: |
+          pip install --upgrade pip
+          pip install "apache-airflow==2.10.3" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.3/constraints-3.12.txt"
+
+      - name: Install project deps
+        run: |
+          pip install pytest pytest-cov pandas pyarrow requests pydantic \
+                      fastapi "uvicorn[standard]" httpx duckdb
+
+      - name: Run pytest (DAGs + API)
+        env:
+          AIRFLOW_HOME: ${{ github.workspace }}/airflow_home
+        run: |
+          pytest tests/dags tests/api -v --tb=short
+
+  dbt-parse:
+    name: dbt parse (compila SQL sem rodar)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install dbt-duckdb==1.9.0
+      - name: dbt deps + parse
+        working-directory: dbt
+        run: |
+          dbt deps --profiles-dir .
+          dbt parse --profiles-dir .
