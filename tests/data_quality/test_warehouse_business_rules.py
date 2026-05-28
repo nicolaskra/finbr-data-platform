@@ -33,9 +33,7 @@ class TestVolumes:
 
     def test_fct_proporcional_a_dim(self, duckdb_con):
         """fct deve ter pelo menos 50% do tamanho do dim (cada fundo >= 1 mes)."""
-        dim_n = duckdb_con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        dim_n = duckdb_con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         fct_n = duckdb_con.execute(
             "select count(*) from main_core.fct_fundo_rentabilidade_mensal"
         ).fetchone()[0]
@@ -115,9 +113,7 @@ class TestIntegridade:
         assert orfaos == 0, f"{orfaos} fatos sem dim correspondente"
 
     def test_dim_sem_duplicatas(self, duckdb_con):
-        total = duckdb_con.execute(
-            "select count(*) from main_core.dim_fundo_classe"
-        ).fetchone()[0]
+        total = duckdb_con.execute("select count(*) from main_core.dim_fundo_classe").fetchone()[0]
         unicos = duckdb_con.execute(
             "select count(distinct sk_fundo_classe) from main_core.dim_fundo_classe"
         ).fetchone()[0]
