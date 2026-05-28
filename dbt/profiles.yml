@@ -1,0 +1,22 @@
+# Profile dbt-duckdb para o projeto finbr.
+# Esse arquivo e versionado porque NAO contem secrets (DuckDB e file-based local).
+# Em prod (Snowflake/BQ) profiles.yml ficaria gitignored com credenciais.
+
+finbr:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '/opt/airflow/data/warehouse/finbr.duckdb'
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet
+    # Target alternativo para desenvolvimento fora do container Airflow
+    local:
+      type: duckdb
+      path: 'data/warehouse/finbr.duckdb'
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet

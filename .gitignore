@@ -46,7 +46,9 @@ airflow_home/
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
-profiles.yml
+# profiles.yml: nao versionar se contiver secrets.
+# No nosso caso (DuckDB file-based local) e seguro versionar — comentado.
+# profiles.yml
 
 # Data (raw is gitignored; only schema goes to repo)
 data/raw/**/*.parquet

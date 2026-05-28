@@ -1,0 +1,13 @@
+# Forca LF (line ending Unix) em todos os arquivos texto.
+# Evita conflito CRLF (Windows) vs LF (Linux/CI).
+# Sem isso, ruff format check no CI quebra em arquivos editados no Windows.
+
+* text=auto eol=lf
+
+# Binarios — nao tocar
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.parquet  binary
+*.duckdb  binary
+*.zip  binary
