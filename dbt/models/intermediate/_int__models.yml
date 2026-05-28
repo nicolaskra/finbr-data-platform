@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: int_fundos__rentabilidade_diaria
+    description: >
+      Rentabilidade diaria por classe de fundo, calculada via
+      LAG(vl_quota) sobre janela ordenada por data.
+      Materializado como VIEW.
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "intermediate"
+      dominio: "mercado_financeiro"
+      tecnica_chave: "window function LAG"
+      formula: "rentabilidade_dia = (vl_quota / vl_quota_anterior) - 1"
+
+    tags:
+      - intermediate
+      - cvm
+      - rentabilidade
+
+    columns:
+      - name: rentabilidade_dia
+        description: >
+          Variacao percentual da quota vs dia anterior (ex: 0.005 = 0.5%).
+          NULL no primeiro dia da serie de cada fundo.
+        meta:
+          unidade: "decimal (multiplique por 100 para %)"
+          range_esperado: "tipicamente [-0.1, +0.1] (10% diario e raro)"
+
+  - name: int_fundos__rentabilidade_mensal
+    description: >
+      Rentabilidade mensal composta por classe de fundo.
+      Formula: EXP(SUM(LN(1 + r_diaria))) - 1 (produto composto).
+      Materializado como VIEW.
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "intermediate"
+      dominio: "mercado_financeiro"
+      tecnica_chave: "produto composto via log"
+      formula: "(1+r1)*(1+r2)*...*(1+rn) - 1 = exp(sum(ln(1+ri))) - 1"
+      cuidado: >
+        Resultado depende fortemente de dias_uteis disponiveis.
+        Fundo com poucos dias (1o mes da serie) pode ter rentabilidade enganosa.
+
+    tags:
+      - intermediate
+      - cvm
+      - rentabilidade
+      - mensal
+
+    columns:
+      - name: dias_uteis
+        description: "Numero de dias uteis observados no mes (filtro tipico: >= 15)"
+        meta:
+          uso: "filtro de qualidade para evitar fundos novos"
+      - name: rentabilidade_mes
+        description: "Rentabilidade composta do mes (decimal)"
+        meta:
+          unidade: "decimal"
+      - name: vl_patrim_liq_fim_mes
+        description: "Patrimonio liquido do fundo no ultimo dia do mes"

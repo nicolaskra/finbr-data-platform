@@ -1,0 +1,77 @@
+version: 2
+
+sources:
+  - name: cvm_raw
+    description: >
+      Dados brutos publicos da CVM (Comissao de Valores Mobiliarios)
+      sobre fundos de investimento, lidos diretamente do data lake
+      em Parquet particionado por YYYY-MM.
+
+    # ============================================================
+    # METADADOS — owner, dominio, SLA, classificacao, governanca
+    # ============================================================
+    meta:
+      owner: "nicolas@finbr"
+      maintainer: "Nicolas Klein"
+      dominio: "mercado_financeiro"
+      camada: "raw"
+      criticidade: "media"
+      pii: false                          # CNPJ de fundo nao e PII
+      origem_oficial: "https://dados.cvm.gov.br/dataset/fi-doc-inf_diario"
+      frequencia_atualizacao: "mensal"
+      fonte: "CVM (Comissao de Valores Mobiliarios)"
+      regulamento: "Resolucao CVM 175/2024 (estrutura Classes/Subclasses)"
+      licenca: "Lei Acesso a Informacao 12.527/2011 — dados publicos"
+      contato_fonte: "https://www.gov.br/cvm/pt-br/canais_atendimento"
+      ultima_revisao_schema: "2026-05-27"
+
+    tags:
+      - cvm
+      - raw
+      - parquet
+
+    tables:
+      - name: informe_diario
+        description: >
+          Informe diario consolidado de Fundos/Classes de Investimento.
+          Cada linha = (data, classe de fundo).
+        meta:
+          grain: "(cnpj_classe, id_subclasse, data_competencia)"
+          volume_aproximado: "~500k linhas/mes / ~25k classes ativas"
+          particionamento: "data/raw/cvm/inf_diario/YYYY-MM/inf_diario.parquet"
+          tamanho_parquet: "~13 MB/mes (compressao snappy)"
+        # Documentacao da localizacao fisica (lida via macro read_raw_parquet)
+        external:
+          location: "read_parquet('{{ var(\"raw_path\") }}/cvm/inf_diario/*/inf_diario.parquet')"
+        columns:
+          - name: TP_FUNDO_CLASSE
+            description: "Tipo da classe (ex: 'CLASSES - FIF', 'CLASSES - FIDC')"
+            meta:
+              dominio_valores: "['CLASSES - FIF', 'CLASSES - FIDC', etc]"
+          - name: CNPJ_FUNDO_CLASSE
+            description: "CNPJ da classe de fundo (chave de negocio publica)"
+            meta:
+              pii: false
+              formato: "XX.XXX.XXX/XXXX-XX"
+          - name: ID_SUBCLASSE
+            description: >
+              ID interno da subclasse quando aplicavel
+              (nullable — nem toda classe tem subclasses)
+          - name: DT_COMPTC
+            description: "Data de competencia (dia util do mercado)"
+          - name: VL_TOTAL
+            description: "Valor total do fundo em R$"
+          - name: VL_QUOTA
+            description: "Valor unitario da quota em R$"
+            meta:
+              regra_negocio: "deve ser > 0; usado para calcular rentabilidade"
+          - name: VL_PATRIM_LIQ
+            description: "Patrimonio liquido do fundo em R$"
+          - name: CAPTC_DIA
+            description: "Captacao do dia em R$ (entrada)"
+          - name: RESG_DIA
+            description: "Resgate do dia em R$ (saida)"
+          - name: NR_COTST
+            description: "Numero de cotistas no dia"
+            meta:
+              uso: "filtro de fundos com baixa pulverizacao"

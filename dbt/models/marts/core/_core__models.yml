@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  # ------------------------------------------------------------------
+  - name: dim_fundo_classe
+    description: >
+      Dimensao de classes de fundo CVM. 1 linha por (CNPJ, subclasse).
+      Atributos atuais derivados do snapshot mais recente.
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "marts.core"
+      tipo: "dimension"
+      dominio: "mercado_financeiro"
+      grain: "1 row per (cnpj_classe, id_subclasse)"
+      scd_type: "SCD1 (snapshot mais recente)"
+      consumido_por:
+        - "fct_fundo_rentabilidade_mensal"
+        - "top_fundos_rentabilidade_mes"
+
+    tags:
+      - mart
+      - dim
+      - cvm
+
+    columns:
+      - name: sk_fundo_classe
+        description: "Surrogate key estavel (hash de cnpj_classe + id_subclasse)"
+        meta:
+          chave: "primary_key"
+          metodo_geracao: "dbt_utils.generate_surrogate_key (MD5)"
+        data_tests:
+          - not_null
+          - unique
+      - name: cnpj_classe
+        description: "CNPJ da classe (natural key part 1)"
+        data_tests:
+          - not_null
+      - name: id_subclasse
+        description: "ID da subclasse (natural key part 2; '__sem_subclasse__' se nulo)"
+      - name: tipo_classe
+        description: "Tipo agregador (ex: 'CLASSES - FIF')"
+      - name: primeira_data_observada
+        description: "Data mais antiga em que essa classe aparece nos dados"
+      - name: ultima_data_observada
+        description: "Data mais recente em que essa classe aparece"
+        data_tests:
+          - not_null
+      - name: vl_patrim_liq_atual
+        description: "Patrimonio liquido na ultima data observada (R$)"
+      - name: nr_cotistas_atual
+        description: "Numero de cotistas na ultima data observada"
+
+  # ------------------------------------------------------------------
+  - name: fct_fundo_rentabilidade_mensal
+    description: >
+      Fato: rentabilidade mensal por classe de fundo.
+      Grain: 1 linha por (classe de fundo, mes).
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "marts.core"
+      tipo: "fact"
+      dominio: "mercado_financeiro"
+      grain: "1 row per (cnpj_classe, id_subclasse, mes)"
+      consumido_por:
+        - "top_fundos_rentabilidade_mes"
+        - "(futuro) fastapi:/fundos/{cnpj}/rentabilidade"
+        - "(futuro) streamlit:dashboard_rentabilidade"
+
+    tags:
+      - mart
+      - fact
+      - cvm
+      - rentabilidade
+
+    columns:
+      - name: sk_rentabilidade
+        description: "Surrogate key (hash cnpj + subclasse + mes)"
+        data_tests:
+          - not_null
+          - unique
+      - name: sk_fundo_classe
+        description: "FK pra dim_fundo_classe"
+        meta:
+          chave: "foreign_key"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_fundo_classe')
+                field: sk_fundo_classe
+      - name: mes
+        description: "Mes de competencia (primeiro dia do mes)"
+        data_tests:
+          - not_null
+      - name: dias_uteis
+        description: "Numero de dias uteis observados no mes"
+      - name: rentabilidade_mes
+        description: "Rentabilidade mensal composta (decimal — multiplique por 100 para %)"
+        meta:
+          unidade: "decimal"

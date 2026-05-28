@@ -1,0 +1,6 @@
+# dbt packages — versoes pinned
+
+packages:
+  # dbt_utils: macros utilities (unique_combination_of_columns, surrogate_key, etc)
+  - package: dbt-labs/dbt_utils
+    version: 1.3.0

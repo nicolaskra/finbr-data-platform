@@ -9,6 +9,6 @@ pyarrow==17.0.0
 # Validacao de schema
 pydantic==2.9.2
 
-# (Etapas futuras)
-# dbt-duckdb==1.9.0
-# duckdb==1.1.3
+# Sessao 2: dbt + DuckDB
+dbt-duckdb==1.9.0
+duckdb==1.1.3

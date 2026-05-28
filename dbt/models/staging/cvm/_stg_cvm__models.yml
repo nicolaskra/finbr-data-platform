@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: stg_cvm__informe_diario
+    description: >
+      Staging do Informe Diario CVM: rename para snake_case, cast de tipos,
+      filtro de linhas com cota invalida (vl_quota nulo/zero).
+      Materializado como VIEW (sem custo de storage).
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "staging"
+      dominio: "mercado_financeiro"
+      sla_horas: 24
+      criticidade: "media"
+      uso_downstream:
+        - "int_fundos__rentabilidade_diaria"
+        - "dim_fundo_classe"
+
+    tags:
+      - staging
+      - cvm
+      - mercado_financeiro
+
+    columns:
+      - name: cnpj_classe
+        description: "CNPJ da classe de fundo (chave de negocio, formato XX.XXX.XXX/XXXX-XX)"
+        meta:
+          chave: "natural_key_component"
+          pii: false
+        data_tests:
+          - not_null
+      - name: id_subclasse
+        description: >
+          ID da subclasse (nullable). Compoe a chave natural junto com cnpj_classe.
+      - name: data_competencia
+        description: "Data de competencia (dia util do mercado financeiro BR)"
+        meta:
+          chave: "natural_key_component"
+        data_tests:
+          - not_null
+      - name: vl_quota
+        description: "Valor unitario da quota em R$ (sempre > 0 pos-staging)"
+        meta:
+          regra_negocio: "Garantido > 0 via filtro no staging"
+          uso: "base do calculo de rentabilidade no proximo layer"
+        data_tests:
+          - not_null
+      - name: tipo_classe
+        description: "Tipo da classe (ex: 'CLASSES - FIF')"
+      - name: vl_total
+        description: "Valor total do fundo em R$"
+      - name: vl_patrim_liq
+        description: "Patrimonio liquido do fundo em R$"
+      - name: captacao_dia
+        description: "Captacao bruta do dia em R$ (entrada de recursos)"
+      - name: resgate_dia
+        description: "Resgate bruto do dia em R$ (saida de recursos)"
+      - name: nr_cotistas
+        description: "Numero de cotistas no dia"
+
+    data_tests:
+      # Chave composta natural: (cnpj_classe, id_subclasse, data_competencia)
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - cnpj_classe
+              - id_subclasse
+              - data_competencia

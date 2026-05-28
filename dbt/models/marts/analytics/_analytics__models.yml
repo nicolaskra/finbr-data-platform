@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: top_fundos_rentabilidade_mes
+    description: >
+      Ranking analitico: top 50 classes de fundo por rentabilidade mensal.
+      Filtros aplicados:
+        - PL >= R$ 1 milhao (evita fundos micro / ilíquidos)
+        - dias_uteis >= 15 (evita fundos com mes incompleto)
+
+    meta:
+      owner: "nicolas@finbr"
+      camada: "marts.analytics"
+      tipo: "ranking"
+      dominio: "mercado_financeiro"
+      grain: "1 row per (mes, ranking_mes <= 50)"
+      uso_pretendido:
+        - "Dashboard 'Top Fundos do Mes'"
+        - "Endpoint REST /analytics/top-fundos"
+        - "Newsletter mensal de mercado"
+      cuidado: >
+        Rentabilidade alta pode mascarar risco. Filtro de PL minimo reduz mas
+        nao elimina outliers (ex: fundo novo com NAV inicial baixo).
+
+    tags:
+      - mart
+      - analytics
+      - ranking
+
+    columns:
+      - name: mes
+        description: "Mes do ranking (primeiro dia)"
+        data_tests:
+          - not_null
+      - name: ranking_mes
+        description: "Posicao no ranking (1 = melhor rentabilidade do mes)"
+        data_tests:
+          - not_null
+      - name: cnpj_classe
+        description: "CNPJ da classe"
+        data_tests:
+          - not_null
+      - name: tipo_classe
+        description: "Tipo da classe (ex: 'CLASSES - FIF')"
+      - name: rentabilidade_mes_pct
+        description: "Rentabilidade mensal em percentual (ja multiplicado por 100)"
+      - name: vl_patrim_liq_fim_mes
+        description: "Patrimonio liquido no fim do mes (filtro >= R$ 1M aplicado)"
+
+exposures:
+  - name: dashboard_top_fundos
+    type: dashboard
+    description: >
+      Dashboard publico de "Top Fundos do Mes" (Streamlit, sessao 3 do roadmap).
+      Refresh: mensal apos ingest CVM.
+    maturity: low
+    url: "https://github.com/nicolaskra/finbr-data-platform#roadmap"
+    owner:
+      name: "Nicolas Klein"
+      email: "nicolas_klein@hotmail.com"
+    depends_on:
+      - ref('top_fundos_rentabilidade_mes')
+      - ref('fct_fundo_rentabilidade_mensal')
+      - ref('dim_fundo_classe')
+
+  - name: api_fundos_rentabilidade
+    type: application
+    description: >
+      Endpoint REST /fundos/{cnpj}/rentabilidade (FastAPI, sessao 3 do roadmap).
+      Retorna serie historica de rentabilidade por classe.
+    maturity: low
+    url: "https://github.com/nicolaskra/finbr-data-platform#roadmap"
+    owner:
+      name: "Nicolas Klein"
+      email: "nicolas_klein@hotmail.com"
+    depends_on:
+      - ref('fct_fundo_rentabilidade_mensal')
+      - ref('dim_fundo_classe')
