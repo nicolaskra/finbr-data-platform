@@ -2,5 +2,11 @@
 headless = true
 
 [theme]
+# Tema "Bloomberg-light" — fundo claro, navy escuro como primario, cinzas neutros.
+# Verde/vermelho usados APENAS em deltas vs benchmark (uso semantico, nao decorativo).
 base = "light"
-primaryColor = "#1e88e5"
+primaryColor = "#0F2A4A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F6F8"
+textColor = "#1A2230"
+font = "sans serif"

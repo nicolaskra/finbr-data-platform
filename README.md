@@ -135,18 +135,21 @@ docker exec finbr-airflow bash -c "cd /opt/airflow/dbt && dbt build --profiles-d
 
 ---
 
-## 📦 Volumes reais (último run)
+## 📦 Volumes reais (último run, 12 meses backfill)
 
 ```
-Staging:     506.122 linhas (todo informe diário do mês)
-Dim:          25.674 classes de fundo únicas
-Fato:         25.598 (rentabilidade mensal por classe)
-Analytics:        50 (top 50 fundos do mês, filtros PL e dias úteis)
-Warehouse:    18.76 MB (single DuckDB file)
+Raw parquets:  6,3M linhas em 12 partições mensais (2025-05 → 2026-04)
+Dim:          28.557 classes de fundo únicas
+Fato:        305.164 linhas (rentabilidade mensal por classe × 12 meses)
+Analytics:       600 (top 50 fundos × 12 meses, filtros PL/dias úteis/cotistas)
+Warehouse:    30.0 MB (DuckDB file commitado pro deploy Streamlit Cloud)
 
-Pipeline pandas:  ~4 segundos  end-to-end
-Pipeline PySpark: ~10 segundos (cold-start JVM)
+Pipeline pandas:  ~4 segundos por mês
+Backfill 12 meses + rebuild warehouse: ~30 segundos end-to-end
 ```
+
+> **Backfill manual:** `python scripts/backfill_cvm.py 2025-05 2026-04`
+> **Rebuild warehouse:** `python scripts/rebuild_warehouse.py` (replica dbt sem o CLI, evita bug de encoding no Windows)
 
 ---
 
@@ -156,7 +159,8 @@ Pipeline PySpark: ~10 segundos (cold-start JVM)
 - [x] **S2** · dbt warehouse DuckDB · 6 models · 16 tests · 2 exposures
 - [x] **S3** · FastAPI + Streamlit + paridade PySpark
 - [x] **S4** · Data quality tests · CI · pre-commit · público
-- [ ] **S5** · Ingest BCB SGS (Selic, IPCA) · timeline macroeconômica
+- [x] **S4.5** · Dashboard redesign v2 (3 páginas, plotly, benchmark CDI hardcoded)
+- [ ] **S5** · Ingest BCB SGS (Selic, IPCA) · substitui CDI hardcoded por lookup real
 - [ ] **S6** · Ingest B3 cotações (PySpark vira default)
 - [ ] **S7** · Evals com Ollama local (Llama 3.1) — opcional
 
